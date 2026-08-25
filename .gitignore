@@ -22,3 +22,24 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Testing Documentation (local development only)
+TESTING_DOCS/
+JIKA_TESTING_GAGAL.md
+START_HERE.md
+TESTING_READY.txt
+RUN_TESTS_SIMPLE.md
+FIXES_APPLIED.md
+FIXES_AND_STATUS.txt
+TEST_STATUS_FINAL.txt
+RINGKASAN_PERUBAHAN.txt
+REQUIREMENT_VERIFICATION.md
+COMPLIANCE_SUMMARY.txt
+run-tests.ps1
+run-tests.bat
+fix-tests.ps1
+fix-tests.bat
+test-output.txt
+test-results.txt
+test-results.log
+test-results-after-fix.txt

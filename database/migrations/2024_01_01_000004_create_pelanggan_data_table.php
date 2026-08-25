@@ -17,6 +17,7 @@ return new class extends Migration
             $table->enum('pelanggan_data_jenis', ['KTP', 'SIM']);
             $table->string('pelanggan_data_file', 255);
             $table->timestamps();
+            $table->softDeletes();
 
             $table->foreign('pelanggan_data_pelanggan_id')
                   ->references('pelanggan_id')->on('pelanggan')

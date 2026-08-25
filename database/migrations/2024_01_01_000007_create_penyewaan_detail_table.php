@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('penyewaan_detail_jumlah');
             $table->integer('penyewaan_detail_subharga');
             $table->timestamps();
+            $table->softDeletes();
 
             $table->foreign('penyewaan_detail_penyewaan_id')
                   ->references('penyewaan_id')->on('penyewaan')

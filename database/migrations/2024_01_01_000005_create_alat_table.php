@@ -19,6 +19,7 @@ return new class extends Migration
             $table->integer('alat_hargaperhari');
             $table->integer('alat_stok');
             $table->timestamps();
+            $table->softDeletes();
 
             $table->foreign('alat_kategori_id')
                   ->references('kategori_id')->on('kategori')

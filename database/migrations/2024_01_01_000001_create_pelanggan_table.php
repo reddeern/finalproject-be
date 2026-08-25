@@ -18,6 +18,7 @@ return new class extends Migration
             $table->char('pelanggan_notelp', 13);
             $table->string('pelanggan_email', 100);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -22,6 +22,7 @@ return new class extends Migration
                   ->default('Belum Kembali');
             $table->integer('penyewaan_totalharga');
             $table->timestamps();
+            $table->softDeletes();
 
             $table->foreign('penyewaan_pelanggan_id')
                   ->references('pelanggan_id')->on('pelanggan')

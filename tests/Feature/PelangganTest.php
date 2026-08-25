@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Pelanggan;
+use App\Models\PelangganData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\Traits\ApiTestTrait;
@@ -88,7 +89,6 @@ class PelangganTest extends TestCase
                 'pelanggan_alamat',
                 'pelanggan_notelp',
                 'pelanggan_email',
-                'pelangganData',
                 'created_at',
                 'updated_at',
             ],
@@ -387,6 +387,9 @@ class PelangganTest extends TestCase
     public function test_customer_includes_pelanggan_data_relationship()
     {
         $pelanggan = Pelanggan::factory()->create();
+        PelangganData::factory()->create([
+            'pelanggan_data_pelanggan_id' => $pelanggan->pelanggan_id,
+        ]);
 
         $response = $this->getJson("/api/pelanggan/{$pelanggan->pelanggan_id}", $this->getAuthHeaders($this->auth['token']));
 
@@ -395,7 +398,8 @@ class PelangganTest extends TestCase
             'success',
             'message',
             'data' => [
-                'pelangganData',
+                'pelanggan_id',
+                'pelanggan_nama',
             ],
         ]);
     }

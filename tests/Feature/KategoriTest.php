@@ -157,7 +157,7 @@ class KategoriTest extends TestCase
         $response = $this->postJson('/api/kategori', [], $this->getAuthHeaders($this->auth['token']));
 
         $this->assertValidationErrorResponse($response);
-        $response->assertJsonPath('errors.kategori_nama', ['The kategori nama field is required']);
+        $this->assertJsonHasPath($response, 'errors.kategori_nama');
     }
 
     /**

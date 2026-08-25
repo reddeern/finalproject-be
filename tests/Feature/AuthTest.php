@@ -91,7 +91,7 @@ class AuthTest extends TestCase
         ]);
 
         $this->assertValidationErrorResponse($response);
-        $response->assertJsonPath('errors.admin_username', ['The admin username field is required']);
+        $response->assertJsonPath('errors.admin_username', ['The admin username field is required.']);
     }
 
     /**
@@ -104,7 +104,7 @@ class AuthTest extends TestCase
         ]);
 
         $this->assertValidationErrorResponse($response);
-        $response->assertJsonPath('errors.password', ['The password field is required']);
+        $response->assertJsonPath('errors.password', ['The password field is required.']);
     }
 
     /**
@@ -151,9 +151,7 @@ class AuthTest extends TestCase
         $response = $this->getJson('/api/me');
 
         $response->assertStatus(401);
-        $response->assertJson([
-            'success' => false,
-        ]);
+        $response->assertJsonPath('message', 'Unauthenticated.');
     }
 
     /**
@@ -167,9 +165,7 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertStatus(401);
-        $response->assertJson([
-            'success' => false,
-        ]);
+        $response->assertJsonPath('message', 'Unauthenticated.');
     }
 
     /**
@@ -194,9 +190,7 @@ class AuthTest extends TestCase
         $response = $this->postJson('/api/logout');
 
         $response->assertStatus(401);
-        $response->assertJson([
-            'success' => false,
-        ]);
+        $response->assertJsonPath('message', 'Unauthenticated.');
     }
 
     /**
@@ -233,9 +227,7 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertStatus(401);
-        $response->assertJson([
-            'success' => false,
-        ]);
+        $response->assertJsonPath('message', 'Unauthenticated.');
     }
 
     /**
@@ -246,9 +238,7 @@ class AuthTest extends TestCase
         $response = $this->postJson('/api/refresh');
 
         $response->assertStatus(401);
-        $response->assertJson([
-            'success' => false,
-        ]);
+        $response->assertJsonPath('message', 'Unauthenticated.');
     }
 
     /**

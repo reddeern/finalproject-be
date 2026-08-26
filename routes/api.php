@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AlatController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\KategoriController;
+use App\Http\Controllers\Api\PelangganAuthController;
 use App\Http\Controllers\Api\PelangganController;
 use App\Http\Controllers\Api\PelangganDataController;
 use App\Http\Controllers\Api\PenyewaanController;
@@ -24,4 +25,13 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('pelanggan-data', PelangganDataController::class)->except(['create', 'edit']);
     Route::apiResource('penyewaan', PenyewaanController::class)->except(['create', 'edit']);
     Route::apiResource('penyewaan-detail', PenyewaanDetailController::class)->except(['create', 'edit']);
+});
+
+// Auth khusus pelanggan (guard: pelanggan-api)
+Route::post('/pelanggan/register', [PelangganAuthController::class, 'register']);
+Route::post('/pelanggan/login', [PelangganAuthController::class, 'login']);
+
+Route::middleware('auth:pelanggan-api')->group(function () {
+    Route::post('/pelanggan/logout', [PelangganAuthController::class, 'logout']);
+    Route::get('/pelanggan/me', [PelangganAuthController::class, 'me']);
 });

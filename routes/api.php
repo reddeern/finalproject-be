@@ -26,11 +26,19 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('pelanggan', PelangganController::class)->except(['create', 'edit']);
     Route::apiResource('pelanggan-data', PelangganDataController::class)->except(['create', 'edit']);
     
-    // Admin bisa lihat semua penyewaan & detail untuk reporting/monitoring
+    // Admin CRUD penyewaan (rental management)
+    Route::post('/penyewaan', [PenyewaanController::class, 'store']);
     Route::get('/penyewaan', [PenyewaanController::class, 'index']);
     Route::get('/penyewaan/{id}', [PenyewaanController::class, 'show']);
+    Route::patch('/penyewaan/{id}', [PenyewaanController::class, 'update']);
+    Route::delete('/penyewaan/{id}', [PenyewaanController::class, 'destroy']);
+    
+    // Admin CRUD penyewaan detail (rental items)
+    Route::post('/penyewaan-detail', [PenyewaanDetailController::class, 'store']);
     Route::get('/penyewaan-detail', [PenyewaanDetailController::class, 'index']);
     Route::get('/penyewaan-detail/{id}', [PenyewaanDetailController::class, 'show']);
+    Route::patch('/penyewaan-detail/{id}', [PenyewaanDetailController::class, 'update']);
+    Route::delete('/penyewaan-detail/{id}', [PenyewaanDetailController::class, 'destroy']);
 });
 
 // ============ PELANGGAN ENDPOINTS (auth:pelanggan-api) ============

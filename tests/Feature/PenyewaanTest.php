@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Pelanggan;
 use App\Models\Penyewaan;
+use App\Models\Alat;
+use App\Models\PenyewaanDetail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\Traits\ApiTestTrait;
@@ -121,6 +123,7 @@ class PenyewaanTest extends TestCase
     public function test_create_rental_successfully()
     {
         $pelanggan = Pelanggan::factory()->create();
+        $alat = Alat::factory()->create();
 
         $data = [
             'penyewaan_pelanggan_id' => $pelanggan->pelanggan_id,
@@ -129,6 +132,13 @@ class PenyewaanTest extends TestCase
             'penyewaan_sttspembayaran' => 'Belum Dibayar',
             'penyewaan_sttskembali' => 'Belum Kembali',
             'penyewaan_totalharga' => 2000000,
+            'detail' => [
+                [
+                    'alat_id' => $alat->alat_id,
+                    'jumlah' => 2,
+                    'subharga' => 1000000,
+                ],
+            ],
         ];
 
         $response = $this->postJson('/api/penyewaan', $data, $this->getAuthHeaders($this->auth['token']));
@@ -399,12 +409,20 @@ class PenyewaanTest extends TestCase
     public function test_rental_default_payment_status()
     {
         $pelanggan = Pelanggan::factory()->create();
+        $alat = Alat::factory()->create();
 
         $response = $this->postJson('/api/penyewaan', [
             'penyewaan_pelanggan_id' => $pelanggan->pelanggan_id,
             'penyewaan_tglsewa' => '2026-09-01',
             'penyewaan_tglkembali' => '2026-09-05',
             'penyewaan_totalharga' => 2000000,
+            'detail' => [
+                [
+                    'alat_id' => $alat->alat_id,
+                    'jumlah' => 1,
+                    'subharga' => 100000,
+                ],
+            ],
         ], $this->getAuthHeaders($this->auth['token']));
 
         $this->assertSuccessResponse($response, 201);
@@ -417,12 +435,20 @@ class PenyewaanTest extends TestCase
     public function test_rental_default_return_status()
     {
         $pelanggan = Pelanggan::factory()->create();
+        $alat = Alat::factory()->create();
 
         $response = $this->postJson('/api/penyewaan', [
             'penyewaan_pelanggan_id' => $pelanggan->pelanggan_id,
             'penyewaan_tglsewa' => '2026-09-01',
             'penyewaan_tglkembali' => '2026-09-05',
             'penyewaan_totalharga' => 2000000,
+            'detail' => [
+                [
+                    'alat_id' => $alat->alat_id,
+                    'jumlah' => 1,
+                    'subharga' => 100000,
+                ],
+            ],
         ], $this->getAuthHeaders($this->auth['token']));
 
         $this->assertSuccessResponse($response, 201);
@@ -437,9 +463,16 @@ class PenyewaanTest extends TestCase
         $pelanggan = Pelanggan::factory()->create([
             'pelanggan_nama' => 'John Doe',
         ]);
+        $alat = Alat::factory()->create();
 
         $penyewaan = Penyewaan::factory()->create([
             'penyewaan_pelanggan_id' => $pelanggan->pelanggan_id,
+        ]);
+
+        // Add rental detail so API returns 200
+        PenyewaanDetail::factory()->create([
+            'penyewaan_detail_penyewaan_id' => $penyewaan->penyewaan_id,
+            'penyewaan_detail_alat_id' => $alat->alat_id,
         ]);
 
         $response = $this->getJson("/api/penyewaan/{$penyewaan->penyewaan_id}", $this->getAuthHeaders($this->auth['token']));

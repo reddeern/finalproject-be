@@ -64,10 +64,12 @@ class PenyewaanController extends Controller
     {
         try {
             // If pelanggan: auto-set own ID
+            // If admin: use the provided pelanggan_id (can book on behalf of customer)
             $data = $request->validated();
             if (auth()->guard() === 'pelanggan-api') {
                 $data['penyewaan_pelanggan_id'] = auth('pelanggan-api')->id();
             }
+            // If admin: pelanggan_id must be provided in request
 
             $penyewaan = Penyewaan::create($data);
 
@@ -86,13 +88,14 @@ class PenyewaanController extends Controller
                 return $this->errorResponse('Data penyewaan tidak ditemukan', 404);
             }
 
-            // If pelanggan: check ownership
-            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+            // If pelanggan: check ownership (only edit own rentals)
+            if (auth()->guard() === 'pelanggan-api') {
                 $customerId = auth('pelanggan-api')->id();
                 if ($penyewaan->penyewaan_pelanggan_id !== $customerId) {
                     return $this->errorResponse('Unauthorized', 403);
                 }
             }
+            // If admin: allow editing any rental
 
             DB::transaction(function () use ($request, $penyewaan) {
                 $penyewaan->update($request->safe()->except('detail'));
@@ -129,13 +132,14 @@ class PenyewaanController extends Controller
                 return $this->errorResponse('Data penyewaan tidak ditemukan', 404);
             }
 
-            // If pelanggan: check ownership
-            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+            // If pelanggan: check ownership (only delete own rentals)
+            if (auth()->guard() === 'pelanggan-api') {
                 $customerId = auth('pelanggan-api')->id();
                 if ($penyewaan->penyewaan_pelanggan_id !== $customerId) {
                     return $this->errorResponse('Unauthorized', 403);
                 }
             }
+            // If admin: allow deleting any rental
 
             $penyewaan->delete();
 

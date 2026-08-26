@@ -15,7 +15,15 @@ class PenyewaanDetailController extends Controller
     public function index()
     {
         try {
-            $data = PenyewaanDetail::with('alat')->get();
+            // If pelanggan: filter by own penyewaan only
+            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                $data = PenyewaanDetail::whereHas('penyewaan', function ($q) use ($customerId) {
+                    $q->where('penyewaan_pelanggan_id', $customerId);
+                })->with('alat')->get();
+            } else {
+                $data = PenyewaanDetail::with('alat')->get();
+            }
 
             if ($data->isEmpty()) {
                 return $this->successResponse(null, 'Successfully get penyewaan_detail data');
@@ -36,6 +44,14 @@ class PenyewaanDetailController extends Controller
                 return $this->errorResponse('Data tidak ditemukan', 404);
             }
 
+            // If pelanggan: check ownership
+            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                if ($item->penyewaan->penyewaan_pelanggan_id !== $customerId) {
+                    return $this->errorResponse('Unauthorized', 403);
+                }
+            }
+
             return $this->successResponse($item, 'Successfully get penyewaan_detail data');
         } catch (\Throwable $e) {
             return $this->errorResponse('There error in Internal Server', 500, $e->getMessage());
@@ -45,6 +61,16 @@ class PenyewaanDetailController extends Controller
     public function store(StorePenyewaanDetailRequest $request)
     {
         try {
+            // Validate ownership: pelanggan can only add to own penyewaan
+            if (auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                $penyewaan = \App\Models\Penyewaan::find($request->penyewaan_detail_penyewaan_id);
+                
+                if (!$penyewaan || $penyewaan->penyewaan_pelanggan_id !== $customerId) {
+                    return $this->errorResponse('Unauthorized', 403);
+                }
+            }
+
             $item = PenyewaanDetail::create($request->validated());
 
             return $this->successResponse($item, 'Berhasil menambahkan data penyewaan_detail', 201);
@@ -62,6 +88,14 @@ class PenyewaanDetailController extends Controller
                 return $this->errorResponse('Data tidak ditemukan', 404);
             }
 
+            // If pelanggan: check ownership
+            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                if ($item->penyewaan->penyewaan_pelanggan_id !== $customerId) {
+                    return $this->errorResponse('Unauthorized', 403);
+                }
+            }
+
             $item->update($request->validated());
 
             return $this->successResponse($item, 'Berhasil memperbarui data penyewaan_detail');
@@ -77,6 +111,14 @@ class PenyewaanDetailController extends Controller
 
             if (! $item) {
                 return $this->errorResponse('Data tidak ditemukan', 404);
+            }
+
+            // If pelanggan: check ownership
+            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                if ($item->penyewaan->penyewaan_pelanggan_id !== $customerId) {
+                    return $this->errorResponse('Unauthorized', 403);
+                }
             }
 
             $item->delete();

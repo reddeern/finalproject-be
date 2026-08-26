@@ -17,7 +17,15 @@ class PenyewaanController extends Controller
     public function index()
     {
         try {
-            $data = Penyewaan::with('pelanggan')->get();
+            // If pelanggan: filter by own ID, else admin sees all
+            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                $data = Penyewaan::where('penyewaan_pelanggan_id', $customerId)
+                    ->with('pelanggan')
+                    ->get();
+            } else {
+                $data = Penyewaan::with('pelanggan')->get();
+            }
 
             if ($data->isEmpty()) {
                 return $this->successResponse(null, 'Successfully get penyewaan data');
@@ -38,6 +46,14 @@ class PenyewaanController extends Controller
                 return $this->errorResponse('Data penyewaan tidak ditemukan', 404);
             }
 
+            // If pelanggan: check ownership
+            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                if ($penyewaan->penyewaan_pelanggan_id !== $customerId) {
+                    return $this->errorResponse('Unauthorized', 403);
+                }
+            }
+
             return $this->successResponse($penyewaan, 'Successfully get penyewaan data');
         } catch (\Throwable $e) {
             return $this->errorResponse('There error in Internal Server', 500, $e->getMessage());
@@ -47,7 +63,13 @@ class PenyewaanController extends Controller
     public function store(StorePenyewaanRequest $request)
     {
         try {
-            $penyewaan = Penyewaan::create($request->validated());
+            // If pelanggan: auto-set own ID
+            $data = $request->validated();
+            if (auth()->guard() === 'pelanggan-api') {
+                $data['penyewaan_pelanggan_id'] = auth('pelanggan-api')->id();
+            }
+
+            $penyewaan = Penyewaan::create($data);
 
             return $this->successResponse($penyewaan, 'Berhasil menambahkan data penyewaan', 201);
         } catch (\Throwable $e) {
@@ -57,37 +79,45 @@ class PenyewaanController extends Controller
 
     public function update(UpdatePenyewaanRequest $request, $id)
     {
-    try {
-        $penyewaan = Penyewaan::find($id);
+        try {
+            $penyewaan = Penyewaan::find($id);
 
-        if (! $penyewaan) {
-            return $this->errorResponse('Data penyewaan tidak ditemukan', 404);
-        }
+            if (! $penyewaan) {
+                return $this->errorResponse('Data penyewaan tidak ditemukan', 404);
+            }
 
-        DB::transaction(function () use ($request, $penyewaan) {
-            $penyewaan->update($request->safe()->except('detail'));
-
-            if ($request->has('detail')) {
-                // Hapus detail lama, ganti dengan yang baru
-                $penyewaan->detail()->delete();
-
-                foreach ($request->detail as $item) {
-                    PenyewaanDetail::create([
-                        'penyewaan_detail_penyewaan_id' => $penyewaan->penyewaan_id,
-                        'penyewaan_detail_alat_id'      => $item['alat_id'],
-                        'penyewaan_detail_jumlah'       => $item['jumlah'],
-                        'penyewaan_detail_subharga'     => $item['subharga'],
-                    ]);
+            // If pelanggan: check ownership
+            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                if ($penyewaan->penyewaan_pelanggan_id !== $customerId) {
+                    return $this->errorResponse('Unauthorized', 403);
                 }
             }
-        });
 
-        $penyewaan->load('detail.alat');
+            DB::transaction(function () use ($request, $penyewaan) {
+                $penyewaan->update($request->safe()->except('detail'));
 
-        return $this->successResponse($penyewaan, 'Berhasil memperbarui data penyewaan');
-    } catch (\Throwable $e) {
-        return $this->errorResponse('There error in Internal Server', 500, $e->getMessage());
-    }
+                if ($request->has('detail')) {
+                    // Hapus detail lama, ganti dengan yang baru
+                    $penyewaan->detail()->delete();
+
+                    foreach ($request->detail as $item) {
+                        PenyewaanDetail::create([
+                            'penyewaan_detail_penyewaan_id' => $penyewaan->penyewaan_id,
+                            'penyewaan_detail_alat_id'      => $item['alat_id'],
+                            'penyewaan_detail_jumlah'       => $item['jumlah'],
+                            'penyewaan_detail_subharga'     => $item['subharga'],
+                        ]);
+                    }
+                }
+            });
+
+            $penyewaan->load('detail.alat');
+
+            return $this->successResponse($penyewaan, 'Berhasil memperbarui data penyewaan');
+        } catch (\Throwable $e) {
+            return $this->errorResponse('There error in Internal Server', 500, $e->getMessage());
+        }
     }
 
     public function destroy($id)
@@ -97,6 +127,14 @@ class PenyewaanController extends Controller
 
             if (! $penyewaan) {
                 return $this->errorResponse('Data penyewaan tidak ditemukan', 404);
+            }
+
+            // If pelanggan: check ownership
+            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                if ($penyewaan->penyewaan_pelanggan_id !== $customerId) {
+                    return $this->errorResponse('Unauthorized', 403);
+                }
             }
 
             $penyewaan->delete();

@@ -16,7 +16,13 @@ class PelangganDataController extends Controller
     public function index()
     {
         try {
-            $data = PelangganData::all();
+            // If pelanggan: filter by own ID
+            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                $data = PelangganData::where('pelanggan_data_pelanggan_id', $customerId)->get();
+            } else {
+                $data = PelangganData::all();
+            }
 
             if ($data->isEmpty()) {
                 return $this->successResponse(null, 'Successfully get pelanggan_data data');
@@ -37,6 +43,14 @@ class PelangganDataController extends Controller
                 return $this->errorResponse('Data tidak ditemukan', 404);
             }
 
+            // If pelanggan: check ownership
+            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                if ($item->pelanggan_data_pelanggan_id !== $customerId) {
+                    return $this->errorResponse('Unauthorized', 403);
+                }
+            }
+
             return $this->successResponse($item, 'Successfully get pelanggan_data data');
         } catch (\Throwable $e) {
             return $this->errorResponse('There error in Internal Server', 500, $e->getMessage());
@@ -46,10 +60,18 @@ class PelangganDataController extends Controller
     public function store(StorePelangganDataRequest $request)
     {
         try {
+            // If pelanggan: auto-set own ID
+            $customerId = null;
+            if (auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+            } else {
+                $customerId = $request->pelanggan_data_pelanggan_id;
+            }
+
             $path = $request->file('pelanggan_data_file')->store('pelanggan_data', 'public');
 
             $item = PelangganData::create([
-                'pelanggan_data_pelanggan_id' => $request->pelanggan_data_pelanggan_id,
+                'pelanggan_data_pelanggan_id' => $customerId,
                 'pelanggan_data_jenis'        => $request->pelanggan_data_jenis,
                 'pelanggan_data_file'         => $path,
             ]);
@@ -67,6 +89,14 @@ class PelangganDataController extends Controller
 
             if (! $item) {
                 return $this->errorResponse('Data tidak ditemukan', 404);
+            }
+
+            // If pelanggan: check ownership
+            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                if ($item->pelanggan_data_pelanggan_id !== $customerId) {
+                    return $this->errorResponse('Unauthorized', 403);
+                }
             }
 
             $payload = $request->safe()->except('pelanggan_data_file');
@@ -93,6 +123,14 @@ class PelangganDataController extends Controller
 
             if (! $item) {
                 return $this->errorResponse('Data tidak ditemukan', 404);
+            }
+
+            // If pelanggan: check ownership
+            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                if ($item->pelanggan_data_pelanggan_id !== $customerId) {
+                    return $this->errorResponse('Unauthorized', 403);
+                }
             }
 
             if ($item->pelanggan_data_file) {

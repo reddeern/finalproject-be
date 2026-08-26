@@ -7,6 +7,8 @@ use App\Http\Requests\Penyewaan\StorePenyewaanRequest;
 use App\Http\Requests\Penyewaan\UpdatePenyewaanRequest;
 use App\Models\Penyewaan;
 use App\Traits\ApiResponse;
+use App\Models\PenyewaanDetail;
+use Illuminate\Support\Facades\DB;
 
 class PenyewaanController extends Controller
 {
@@ -15,7 +17,15 @@ class PenyewaanController extends Controller
     public function index()
     {
         try {
-            $data = Penyewaan::with('pelanggan')->get();
+            // If pelanggan: filter by own ID, else admin sees all
+            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                $data = Penyewaan::where('penyewaan_pelanggan_id', $customerId)
+                    ->with('pelanggan')
+                    ->get();
+            } else {
+                $data = Penyewaan::with('pelanggan')->get();
+            }
 
             if ($data->isEmpty()) {
                 return $this->successResponse(null, 'Successfully get penyewaan data');
@@ -36,6 +46,14 @@ class PenyewaanController extends Controller
                 return $this->errorResponse('Data penyewaan tidak ditemukan', 404);
             }
 
+            // If pelanggan: check ownership
+            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                if ($penyewaan->penyewaan_pelanggan_id !== $customerId) {
+                    return $this->errorResponse('Unauthorized', 403);
+                }
+            }
+
             return $this->successResponse($penyewaan, 'Successfully get penyewaan data');
         } catch (\Throwable $e) {
             return $this->errorResponse('There error in Internal Server', 500, $e->getMessage());
@@ -45,7 +63,15 @@ class PenyewaanController extends Controller
     public function store(StorePenyewaanRequest $request)
     {
         try {
-            $penyewaan = Penyewaan::create($request->validated());
+            // If pelanggan: auto-set own ID
+            // If admin: use the provided pelanggan_id (can book on behalf of customer)
+            $data = $request->validated();
+            if (auth()->guard() === 'pelanggan-api') {
+                $data['penyewaan_pelanggan_id'] = auth('pelanggan-api')->id();
+            }
+            // If admin: pelanggan_id must be provided in request
+
+            $penyewaan = Penyewaan::create($data);
 
             return $this->successResponse($penyewaan, 'Berhasil menambahkan data penyewaan', 201);
         } catch (\Throwable $e) {
@@ -62,7 +88,34 @@ class PenyewaanController extends Controller
                 return $this->errorResponse('Data penyewaan tidak ditemukan', 404);
             }
 
-            $penyewaan->update($request->validated());
+            // If pelanggan: check ownership (only edit own rentals)
+            if (auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                if ($penyewaan->penyewaan_pelanggan_id !== $customerId) {
+                    return $this->errorResponse('Unauthorized', 403);
+                }
+            }
+            // If admin: allow editing any rental
+
+            DB::transaction(function () use ($request, $penyewaan) {
+                $penyewaan->update($request->safe()->except('detail'));
+
+                if ($request->has('detail')) {
+                    // Hapus detail lama, ganti dengan yang baru
+                    $penyewaan->detail()->delete();
+
+                    foreach ($request->detail as $item) {
+                        PenyewaanDetail::create([
+                            'penyewaan_detail_penyewaan_id' => $penyewaan->penyewaan_id,
+                            'penyewaan_detail_alat_id'      => $item['alat_id'],
+                            'penyewaan_detail_jumlah'       => $item['jumlah'],
+                            'penyewaan_detail_subharga'     => $item['subharga'],
+                        ]);
+                    }
+                }
+            });
+
+            $penyewaan->load('detail.alat');
 
             return $this->successResponse($penyewaan, 'Berhasil memperbarui data penyewaan');
         } catch (\Throwable $e) {
@@ -78,6 +131,15 @@ class PenyewaanController extends Controller
             if (! $penyewaan) {
                 return $this->errorResponse('Data penyewaan tidak ditemukan', 404);
             }
+
+            // If pelanggan: check ownership (only delete own rentals)
+            if (auth()->guard() === 'pelanggan-api') {
+                $customerId = auth('pelanggan-api')->id();
+                if ($penyewaan->penyewaan_pelanggan_id !== $customerId) {
+                    return $this->errorResponse('Unauthorized', 403);
+                }
+            }
+            // If admin: allow deleting any rental
 
             $penyewaan->delete();
 

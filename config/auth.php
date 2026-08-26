@@ -32,6 +32,11 @@ return [
             'driver' => 'jwt',
             'provider' => 'admins',
         ],
+
+            'pelanggan-api' => [          // <-- TAMBAHKAN
+        'driver' => 'jwt',
+        'provider' => 'pelanggans',
+        ],
     ],
 
     /*
@@ -49,6 +54,11 @@ return [
         'admins' => [
             'driver' => 'eloquent',
             'model' => App\Models\Admin::class,
+        ],
+
+        'pelanggans' => [              // <-- TAMBAHKAN
+        'driver' => 'eloquent',
+        'model' => App\Models\Pelanggan::class,
         ],
     ],
 

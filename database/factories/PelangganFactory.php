@@ -16,6 +16,7 @@ class PelangganFactory extends Factory
             'pelanggan_alamat' => $this->faker->address(),
             'pelanggan_notelp' => $this->faker->numerify('08##########'),
             'pelanggan_email' => $this->faker->unique()->safeEmail(),
+            'pelanggan_password' => bcrypt('password123'),
         ];
     }
 }

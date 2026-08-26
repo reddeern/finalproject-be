@@ -7,6 +7,8 @@ use App\Http\Requests\Penyewaan\StorePenyewaanRequest;
 use App\Http\Requests\Penyewaan\UpdatePenyewaanRequest;
 use App\Models\Penyewaan;
 use App\Traits\ApiResponse;
+use App\Models\PenyewaanDetail;
+use Illuminate\Support\Facades\DB;
 
 class PenyewaanController extends Controller
 {
@@ -55,19 +57,37 @@ class PenyewaanController extends Controller
 
     public function update(UpdatePenyewaanRequest $request, $id)
     {
-        try {
-            $penyewaan = Penyewaan::find($id);
+    try {
+        $penyewaan = Penyewaan::find($id);
 
-            if (! $penyewaan) {
-                return $this->errorResponse('Data penyewaan tidak ditemukan', 404);
-            }
-
-            $penyewaan->update($request->validated());
-
-            return $this->successResponse($penyewaan, 'Berhasil memperbarui data penyewaan');
-        } catch (\Throwable $e) {
-            return $this->errorResponse('There error in Internal Server', 500, $e->getMessage());
+        if (! $penyewaan) {
+            return $this->errorResponse('Data penyewaan tidak ditemukan', 404);
         }
+
+        DB::transaction(function () use ($request, $penyewaan) {
+            $penyewaan->update($request->safe()->except('detail'));
+
+            if ($request->has('detail')) {
+                // Hapus detail lama, ganti dengan yang baru
+                $penyewaan->detail()->delete();
+
+                foreach ($request->detail as $item) {
+                    PenyewaanDetail::create([
+                        'penyewaan_detail_penyewaan_id' => $penyewaan->penyewaan_id,
+                        'penyewaan_detail_alat_id'      => $item['alat_id'],
+                        'penyewaan_detail_jumlah'       => $item['jumlah'],
+                        'penyewaan_detail_subharga'     => $item['subharga'],
+                    ]);
+                }
+            }
+        });
+
+        $penyewaan->load('detail.alat');
+
+        return $this->successResponse($penyewaan, 'Berhasil memperbarui data penyewaan');
+    } catch (\Throwable $e) {
+        return $this->errorResponse('There error in Internal Server', 500, $e->getMessage());
+    }
     }
 
     public function destroy($id)

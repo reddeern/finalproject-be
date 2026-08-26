@@ -21,10 +21,10 @@ class PenyewaanController extends Controller
             if (auth()->check() && auth()->guard() === 'pelanggan-api') {
                 $customerId = auth('pelanggan-api')->id();
                 $data = Penyewaan::where('penyewaan_pelanggan_id', $customerId)
-                    ->with('pelanggan')
+                    ->with(['pelanggan', 'detail.alat'])
                     ->get();
             } else {
-                $data = Penyewaan::with('pelanggan')->get();
+                $data = Penyewaan::with(['pelanggan', 'detail.alat'])->get();
             }
 
             if ($data->isEmpty()) {

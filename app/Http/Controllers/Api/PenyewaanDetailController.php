@@ -61,7 +61,8 @@ class PenyewaanDetailController extends Controller
     public function store(StorePenyewaanDetailRequest $request)
     {
         try {
-            // Validate ownership: pelanggan can only add to own penyewaan
+            // Validate ownership ONLY for pelanggan
+            // Admin can add items to any rental
             if (auth()->guard() === 'pelanggan-api') {
                 $customerId = auth('pelanggan-api')->id();
                 $penyewaan = \App\Models\Penyewaan::find($request->penyewaan_detail_penyewaan_id);
@@ -70,6 +71,7 @@ class PenyewaanDetailController extends Controller
                     return $this->errorResponse('Unauthorized', 403);
                 }
             }
+            // If admin: allow adding to any rental
 
             $item = PenyewaanDetail::create($request->validated());
 
@@ -88,13 +90,14 @@ class PenyewaanDetailController extends Controller
                 return $this->errorResponse('Data tidak ditemukan', 404);
             }
 
-            // If pelanggan: check ownership
-            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+            // If pelanggan: check ownership (only edit own items)
+            if (auth()->guard() === 'pelanggan-api') {
                 $customerId = auth('pelanggan-api')->id();
                 if ($item->penyewaan->penyewaan_pelanggan_id !== $customerId) {
                     return $this->errorResponse('Unauthorized', 403);
                 }
             }
+            // If admin: allow editing any item
 
             $item->update($request->validated());
 
@@ -113,13 +116,14 @@ class PenyewaanDetailController extends Controller
                 return $this->errorResponse('Data tidak ditemukan', 404);
             }
 
-            // If pelanggan: check ownership
-            if (auth()->check() && auth()->guard() === 'pelanggan-api') {
+            // If pelanggan: check ownership (only delete own items)
+            if (auth()->guard() === 'pelanggan-api') {
                 $customerId = auth('pelanggan-api')->id();
                 if ($item->penyewaan->penyewaan_pelanggan_id !== $customerId) {
                     return $this->errorResponse('Unauthorized', 403);
                 }
             }
+            // If admin: allow deleting any item
 
             $item->delete();
 

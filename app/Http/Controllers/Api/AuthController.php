@@ -3,12 +3,38 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\RegisterRequest;
+use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
+
+        public function register(RegisterRequest $request)
+{
+    try {
+        $admin = Admin::create([
+            'admin_username' => $request->admin_username,
+            'admin_password' => $request->password, // otomatis di-hash oleh mutator di model
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Admin berhasil didaftarkan',
+            'data' => null,
+        ], 201);
+        
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'There error in Internal Server',
+            'data'    => null,
+            'errors'  => $e->getMessage(),
+        ], 500);
+    }
+}
 
     public function login(Request $request)
     {

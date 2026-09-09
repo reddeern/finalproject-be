@@ -12,8 +12,23 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
-    })->create();
+    $exceptions->shouldRenderJsonWhen(function ($request, Throwable $e) {
+        if ($request->is('api/*')) {
+            return true;
+        }
+        return $request->expectsJson();
+    });
+
+    $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+        if ($request->is('api/*')) {
+            return response()->json(
+                ['message' => 'Unauthenticated.'],
+                401
+            )->header('Access-Control-Allow-Origin', $request->headers->get('Origin', '*'))
+             ->header('Access-Control-Allow-Credentials', 'true');
+        }
+    });
+})->create();

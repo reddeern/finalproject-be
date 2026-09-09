@@ -2,17 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class Pelanggan extends Authenticatable implements AuthenticatableContract, JWTSubject
+class Pelanggan extends Authenticatable implements JWTSubject
 {
     use HasFactory, SoftDeletes;
 
     protected $table = 'pelanggan';
+
     protected $primaryKey = 'pelanggan_id';
 
     protected $fillable = [
@@ -51,11 +51,19 @@ class Pelanggan extends Authenticatable implements AuthenticatableContract, JWTS
 
     public function pelangganData()
     {
-        return $this->hasMany(PelangganData::class, 'pelanggan_data_pelanggan_id', 'pelanggan_id');
+        return $this->hasMany(
+            PelangganData::class,
+            'pelanggan_data_pelanggan_id',
+            'pelanggan_id'
+        );
     }
 
     public function penyewaan()
     {
-        return $this->hasMany(Penyewaan::class, 'penyewaan_pelanggan_id', 'pelanggan_id');
+        return $this->hasMany(
+            Penyewaan::class,
+            'penyewaan_pelanggan_id',
+            'pelanggan_id'
+        );
     }
 }

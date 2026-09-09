@@ -14,6 +14,7 @@ class UpdateAlatRequest extends BaseApiRequest
             'alat_deskripsi'     => 'sometimes|required|string|max:255',
             'alat_hargaperhari'  => 'sometimes|required|integer|min:0',
             'alat_stok'          => 'sometimes|required|integer|min:0',
+            'alat_gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ];
     }
 

@@ -12,7 +12,7 @@ class StorePenyewaanRequest extends BaseApiRequest
             'penyewaan_pelanggan_id'   => 'required|integer|exists:pelanggan,pelanggan_id',
             'penyewaan_tglsewa'        => 'required|date',
             'penyewaan_tglkembali'     => 'required|date|after_or_equal:penyewaan_tglsewa',
-            'penyewaan_sttspembayaran' => 'sometimes|in:Lunas,Belum Dibayar,DP',
+            'penyewaan_sttspembayaran' => 'sometimes|in:Lunas,Belum Dibayar',
             'penyewaan_sttskembali'    => 'sometimes|in:Sudah Kembali,Belum Kembali',
             'penyewaan_totalharga'     => 'required|integer|min:0',
 
@@ -20,7 +20,7 @@ class StorePenyewaanRequest extends BaseApiRequest
             'detail'                   => 'required|array|min:1',
             'detail.*.alat_id'         => 'required|integer|exists:alat,alat_id',
             'detail.*.jumlah'          => 'required|integer|min:1',
-            'detail.*.subharga'        => 'required|integer|min:0',
+            'detail.*.subharga'        => 'required|numeric',
         ];
     }
 

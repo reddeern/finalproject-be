@@ -14,6 +14,7 @@ class StoreAlatRequest extends BaseApiRequest
             'alat_deskripsi'     => 'required|string|max:255',
             'alat_hargaperhari'  => 'required|integer|min:0',
             'alat_stok'          => 'required|integer|min:0',
+            'alat_gambar'        => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ];
     }
 

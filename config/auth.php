@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Admin;
-use App\Models\User;
+use App\Models\Pelanggan;
 
 return [
 
@@ -23,19 +23,17 @@ return [
     */
 
     'guards' => [
-        'web' => [
-            'driver' => 'session',
-            'provider' => 'users',
-        ],
 
+        // Guard untuk ADMIN
         'api' => [
             'driver' => 'jwt',
             'provider' => 'admins',
         ],
 
-            'pelanggan-api' => [          // <-- TAMBAHKAN
-        'driver' => 'jwt',
-        'provider' => 'pelanggans',
+        // Guard untuk PELANGGAN
+        'pelanggan-api' => [
+            'driver' => 'jwt',
+            'provider' => 'pelanggans',
         ],
     ],
 
@@ -46,19 +44,17 @@ return [
     */
 
     'providers' => [
-        'users' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\Pelanggan::class,
-        ],
 
+        // Provider untuk ADMIN
         'admins' => [
             'driver' => 'eloquent',
-            'model' => App\Models\Admin::class,
+            'model' => Admin::class,
         ],
 
-        'pelanggans' => [              // <-- TAMBAHKAN
-        'driver' => 'eloquent',
-        'model' => App\Models\Pelanggan::class,
+        // Provider untuk PELANGGAN
+        'pelanggans' => [
+            'driver' => 'eloquent',
+            'model' => Pelanggan::class,
         ],
     ],
 
@@ -69,9 +65,25 @@ return [
     */
 
     'passwords' => [
-        'users' => [
-            'provider' => 'users',
-            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+
+        // Reset password ADMIN
+        'admins' => [
+            'provider' => 'admins',
+            'table' => env(
+                'AUTH_PASSWORD_RESET_TOKEN_TABLE',
+                'password_reset_tokens'
+            ),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        // Reset password PELANGGAN
+        'pelanggans' => [
+            'provider' => 'pelanggans',
+            'table' => env(
+                'AUTH_PASSWORD_RESET_TOKEN_TABLE',
+                'password_reset_tokens'
+            ),
             'expire' => 60,
             'throttle' => 60,
         ],

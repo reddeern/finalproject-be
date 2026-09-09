@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 // ============ ADMIN ENDPOINTS (auth:api) ============
 // Publik, tidak butuh token
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register']); 
 
 // Wajib token admin: header Authorization: Bearer <token>
 Route::middleware('auth:api')->group(function () {
@@ -27,6 +28,7 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('pelanggan-data', PelangganDataController::class)->except(['create', 'edit']);
     
     // Admin CRUD penyewaan (rental management)
+    Route::patch('/penyewaan/{id}/kembali', [PenyewaanController::class, 'kembali']);
     Route::post('/penyewaan', [PenyewaanController::class, 'store']);
     Route::get('/penyewaan', [PenyewaanController::class, 'index']);
     Route::get('/penyewaan/{id}', [PenyewaanController::class, 'show']);

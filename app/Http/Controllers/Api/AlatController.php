@@ -7,21 +7,58 @@ use App\Http\Requests\Alat\StoreAlatRequest;
 use App\Http\Requests\Alat\UpdateAlatRequest;
 use App\Models\Alat;
 use App\Traits\ApiResponse;
+use Illuminate\Http\Request;
 
 class AlatController extends Controller
 {
     use ApiResponse;
 
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $data = Alat::with('kategori')->get();
+            $query = Alat::with('kategori');
 
-            if ($data->isEmpty()) {
-                return $this->successResponse(null, 'Successfully get alat data');
+            // Filter by kategori
+            if ($request->filled('kategori_id')) {
+                $query->where('alat_kategori_id', $request->kategori_id);
             }
 
-            return $this->successResponse($data, 'Successfully get alat data');
+            // Search by name or description
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('alat_nama', 'like', "%{$search}%")
+                      ->orWhere('alat_deskripsi', 'like', "%{$search}%");
+                });
+            }
+
+            // Sort
+            $sortBy = $request->get('sort_by', 'alat_id');
+            $sortOrder = $request->get('sort_order', 'desc');
+            $allowedSorts = ['alat_nama', 'alat_hargaperhari', 'alat_stok', 'alat_id'];
+            if (in_array($sortBy, $allowedSorts)) {
+                $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
+            }
+
+            // Pagination
+            $perPage = (int) $request->get('per_page', 10);
+            $perPage = min(max($perPage, 1), 50);
+            $page = (int) $request->get('page', 1);
+
+            $total = $query->count();
+            $data = $query->skip(($page - 1) * $perPage)->take($perPage)->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Successfully get alat data',
+                'data' => $data,
+                'meta' => [
+                    'total' => $total,
+                    'per_page' => $perPage,
+                    'current_page' => $page,
+                    'last_page' => (int) ceil($total / $perPage),
+                ],
+            ]);
         } catch (\Throwable $e) {
             return $this->errorResponse('There error in Internal Server', 500, $e->getMessage());
         }

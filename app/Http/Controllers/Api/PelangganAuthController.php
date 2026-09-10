@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Pelanggan\RegisterPelangganRequest;
+use App\Http\Requests\Pelanggan\UpdatePelangganRequest;
 use App\Models\Pelanggan;
 use App\Models\PelangganData;
 use Illuminate\Http\Request;
@@ -110,6 +111,27 @@ class PelangganAuthController extends Controller
             'message' => 'Berhasil logout',
             'data'    => null,
         ], 200);
+    }
+
+    public function updateProfile(UpdatePelangganRequest $request)
+    {
+        try {
+            $pelanggan = Auth::guard('pelanggan-api')->user();
+            $pelanggan->update($request->validated());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Berhasil memperbarui profil',
+                'data'    => $pelanggan,
+            ], 200);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui profil',
+                'data'    => null,
+                'errors'  => $e->getMessage(),
+            ], 500);
+        }
     }
 
     protected function respondWithToken(Pelanggan $pelanggan, string $token, string $message = 'Success')

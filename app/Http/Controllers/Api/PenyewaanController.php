@@ -22,7 +22,7 @@ class PenyewaanController extends Controller
             if (Auth::check() && Auth::user()->role === 'pelanggan-api') {
                 $customerId = Auth::user()->id;
                 $data = Penyewaan::where('penyewaan_pelanggan_id', $customerId)
-                    ->with(['pelanggan', 'detail.alat']) 
+                    ->with(['pelanggan', 'detail.alat'])
                     ->get();
             } else {
                 $data = Penyewaan::with(['pelanggan', 'detail.alat'])->get();

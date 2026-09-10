@@ -20,7 +20,7 @@ class AlatController extends Controller
     public function index()
     {
         try {
-            $data = Alat::with('kategori')->get();
+            $query = Alat::with('kategori');
 
             if ($data->isEmpty()) {
                 return $this->successResponse(
